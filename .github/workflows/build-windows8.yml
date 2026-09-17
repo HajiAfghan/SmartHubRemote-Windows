@@ -7,6 +7,9 @@ on:
       - "Windows-Companion/**"
       - ".github/workflows/build-windows8.yml"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-2022
@@ -42,3 +45,16 @@ jobs:
           path: release/SmartHubRemote-Windows8
           if-no-files-found: error
           retention-days: 30
+
+      - name: Create portable ZIP
+        shell: powershell
+        run: |
+          Compress-Archive -Path "release\SmartHubRemote-Windows8\*" -DestinationPath "release\SmartHubRemote-Windows8-Portable.zip" -Force
+
+      - name: Publish permanent download in GitHub Releases
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "windows8-build-${{ github.run_number }}"
+          gh release create $tag "release\SmartHubRemote-Windows8-Portable.zip" --repo "${{ github.repository }}" --title "SmartHub Remote Windows 8 Build ${{ github.run_number }}" --notes "Portable Windows 8/8.1/10/11 build with the server-start crash fix. Extract the ZIP and keep all files together." --latest
