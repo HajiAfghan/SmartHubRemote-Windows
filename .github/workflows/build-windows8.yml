@@ -1,0 +1,44 @@
+name: Build SmartHub Remote for Windows 8
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Windows-Companion/**"
+      - ".github/workflows/build-windows8.yml"
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download .NET Framework 4.5 reference assemblies
+        shell: powershell
+        run: |
+          nuget install Microsoft.NETFramework.ReferenceAssemblies.net45 -Version 1.0.3 -OutputDirectory packages -NonInteractive
+
+      - name: Build Windows 8 companion
+        shell: powershell
+        run: |
+          $framework = Resolve-Path "packages\Microsoft.NETFramework.ReferenceAssemblies.net45.1.0.3\build\.NETFramework\v4.5"
+          msbuild "Windows-Companion\SmartHubRemote.sln" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /p:FrameworkPathOverride="$framework" /m
+
+      - name: Prepare portable EXE folder
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "release\SmartHubRemote-Windows8" | Out-Null
+          Copy-Item "Windows-Companion\SmartHubRemote\bin\Release\*" "release\SmartHubRemote-Windows8" -Recurse -Force
+          Set-Content -Path "release\SmartHubRemote-Windows8\README.txt" -Value "SmartHub Remote Companion v1.1.2 - Windows 8 portable build. Keep all files together and run SmartHubRemote.exe."
+
+      - name: Upload ready program
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartHubRemote-Windows8-Portable
+          path: release/SmartHubRemote-Windows8
+          if-no-files-found: error
+          retention-days: 30
