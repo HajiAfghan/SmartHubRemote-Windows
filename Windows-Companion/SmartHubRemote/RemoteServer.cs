@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -46,7 +47,7 @@ namespace SmartHubRemote {
         void Send(Action<string> send,object value){try{send(json.Serialize(value));}catch{}}
         void Ack(Action<string> send,string command){Send(send,new{type="ack",command=command});}
         void UI(Action a){if(ui.IsDisposed)return;if(ui.InvokeRequired)ui.BeginInvoke(a);else a();}
-        static string Get(Dictionary<string,object> m,string k){object v;return m.TryGetValue(k,out v)&&v!=null?Convert.ToString(v):"";} static double Num(Dictionary<string,object>m,string k){double x;double.TryParse(Get(m,k),out x);return x;} static bool Bool(Dictionary<string,object>m,string k){bool x;bool.TryParse(Get(m,k),out x);return x;}
+        static string Get(Dictionary<string,object> m,string k){object v;return m.TryGetValue(k,out v)&&v!=null?Convert.ToString(v,CultureInfo.InvariantCulture):"";} static double Num(Dictionary<string,object>m,string k){object v;if(!m.TryGetValue(k,out v)||v==null)return 0;try{return Convert.ToDouble(v,CultureInfo.InvariantCulture);}catch{double x;double.TryParse(Convert.ToString(v,CultureInfo.InvariantCulture),NumberStyles.Any,CultureInfo.InvariantCulture,out x);return x;}} static bool Bool(Dictionary<string,object>m,string k){bool x;bool.TryParse(Get(m,k),out x);return x;}
         static string Unique(string p){if(!File.Exists(p))return p;string d=Path.GetDirectoryName(p),n=Path.GetFileNameWithoutExtension(p),e=Path.GetExtension(p);for(int i=1;;i++){string x=Path.Combine(d,n+" ("+i+")"+e);if(!File.Exists(x))return x;}}
         public void Dispose(){if(cancel!=null)cancel.Cancel();try{listener?.Stop();}catch{}try{discovery?.Close();}catch{}listener=null;discovery=null;foreach(var c in clients.Values)try{c.Tcp.Close();}catch{}clients.Clear();}
         sealed class ClientSession{public Guid Id=Guid.NewGuid();public TcpClient Tcp;public SessionState State=new SessionState();public Action<string> Send;public ClientSession(TcpClient t){Tcp=t;}}
