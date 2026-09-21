@@ -36,7 +36,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path "release\SmartHubRemote-Windows8" | Out-Null
           Copy-Item "Windows-Companion\SmartHubRemote\bin\Release\*" "release\SmartHubRemote-Windows8" -Recurse -Force
-          Set-Content -Path "release\SmartHubRemote-Windows8\README.txt" -Value "SmartHub Remote Companion v1.4.0 - Windows 8/8.1/10/11. Includes LAN + online PC remote control, online/LAN phone control, live screens and accelerated resumable LAN files. The SmartHub relay URL is already configured. Keep all files together and run SmartHubRemote.exe."
+          Set-Content -Path "release\SmartHubRemote-Windows8\README.txt" -Value "SmartHub Remote Companion v1.5.0 - Windows 8/8.1/10/11. Full-screen mouse control, automatic two-way clipboard, LAN + online PC control, phone control and fast files. Keep all files together and run SmartHubRemote.exe."
 
       - name: Upload ready program
         uses: actions/upload-artifact@v4
@@ -57,4 +57,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "windows8-build-${{ github.run_number }}"
-          gh release create $tag "release\SmartHubRemote-Windows8-Portable.zip" --repo "${{ github.repository }}" --title "SmartHub Remote Windows Build ${{ github.run_number }}" --notes "SmartHub Remote Companion v1.4.0 for Windows 8/8.1/10/11. Includes LAN + online PC control, live screens and accelerated resumable LAN files. Extract the ZIP and keep all files together." --latest
+          gh release create $tag "release\SmartHubRemote-Windows8-Portable.zip" --repo "${{ github.repository }}" --title "SmartHub Remote Windows Build ${{ github.run_number }}" --notes "SmartHub Remote Companion v1.5.0 for Windows 8/8.1/10/11. Full-screen mouse control and automatic two-way clipboard sync. Extract the ZIP and keep all files together." --latest
