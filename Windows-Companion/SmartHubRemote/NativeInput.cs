@@ -10,7 +10,7 @@ namespace SmartHubRemote {
         [DllImport("user32.dll")] static extern void keybd_event(byte vk,byte scan,uint flags,UIntPtr extra);
         [DllImport("user32.dll")] public static extern bool LockWorkStation();
         [DllImport("powrprof.dll", SetLastError=true)] public static extern bool SetSuspendState(bool hibernate,bool force,bool disableWake);
-        const uint LEFTDOWN=0x0002,LEFTUP=0x0004,RIGHTDOWN=0x0008,RIGHTUP=0x0010,MIDDLEDOWN=0x0020,MIDDLEUP=0x0040,WHEEL=0x0800;
+        const uint MOVE=0x0001,LEFTDOWN=0x0002,LEFTUP=0x0004,RIGHTDOWN=0x0008,RIGHTUP=0x0010,MIDDLEDOWN=0x0020,MIDDLEUP=0x0040,WHEEL=0x0800;
         const uint INPUT_MOUSE=0,INPUT_KEYBOARD=1,KEYUP=0x0002,UNICODE=0x0004;
         [StructLayout(LayoutKind.Sequential)] struct POINT { public int X,Y; }
         [StructLayout(LayoutKind.Sequential)] struct INPUT { public uint type; public InputUnion U; }
@@ -22,7 +22,7 @@ namespace SmartHubRemote {
         [StructLayout(LayoutKind.Sequential)] struct KEYBDINPUT { public ushort vk,scan; public uint flags,time; public UIntPtr extra; }
         [StructLayout(LayoutKind.Sequential)] struct HARDWAREINPUT { public uint message; public ushort paramL,paramH; }
         public static void SetPosition(int x,int y){if(!SetCursorPos(x,y))throw new Win32Exception(Marshal.GetLastWin32Error(),"Windows refused cursor movement");}
-        public static void Move(double dx,double dy){POINT p;if(!GetCursorPos(out p))throw new Win32Exception(Marshal.GetLastWin32Error(),"Could not read cursor position");SetPosition(p.X+(int)Math.Round(dx),p.Y+(int)Math.Round(dy));}
+        public static void Move(double dx,double dy){int x=(int)Math.Round(dx),y=(int)Math.Round(dy);if(x==0&&Math.Abs(dx)>.1)x=Math.Sign(dx);if(y==0&&Math.Abs(dy)>.1)y=Math.Sign(dy);if(x==0&&y==0)return;var input=Mouse(MOVE);input.U.mi.dx=x;input.U.mi.dy=y;if(!Inject(input))mouse_event(MOVE,unchecked((uint)x),unchecked((uint)y),0,UIntPtr.Zero);}
         static INPUT Mouse(uint flags,uint data=0){var i=new INPUT();i.type=INPUT_MOUSE;i.U.mi.flags=flags;i.U.mi.mouseData=data;return i;}
         static INPUT KeyInput(ushort vk,ushort scan,uint flags){var i=new INPUT();i.type=INPUT_KEYBOARD;i.U.ki.vk=vk;i.U.ki.scan=scan;i.U.ki.flags=flags;return i;}
         static bool Inject(params INPUT[] input){return SendInput((uint)input.Length,input,Marshal.SizeOf(typeof(INPUT)))==(uint)input.Length;}
